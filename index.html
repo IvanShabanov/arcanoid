@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Арканоид</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<script src="jquery-3.1.0.slim.min.js"></script>
+		<script src="jquery.mobile-1.4.5.min.js"></script>
+    <meta name="viewport" content="width=300, initial-scale=1.0">
+  <style>
+  .mousepoly{
+    margin: 0 auto;  
+    width: 300px;
+    height: 100%;
+    outline: 1px solid #eee;
+  }
+  .gamepoly{
+    border: 1px solid black;
+    background: #ccf;
+    width: 300px;
+    height: 300px;
+    position: relative;
+    overflow: hidden;
+  }
+  .menu {
+    position: absolute;
+    top: 170px;
+    left: 0px;
+    width: 300px;
+  }
+  .button{
+    width: 100px;
+    margin: 0 auto;
+    background: #777;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 10px; 
+    text-align: center;
+    cursor:pointer;
+    
+  }
+  .button:hover{
+    background: #eee;
+  }
+  .button:action{
+
+    background: #333;
+  }
+
+  .pad {
+    position: absolute;
+    width: 50px;
+    margin-left:-25px;
+    height: 15px;
+    background: #888;        
+    bottom: 15px;
+    left: 150px;
+  }
+  .ball {
+    position: absolute;
+    width: 10px;
+    margin-left:-5px;
+    margin-top:-5px;    
+    height: 10px;
+    border-radius: 5px;
+    background: #000;        
+    top: 150px;
+    left: 150px;
+  }
+  .brick {
+    position: absolute;
+    width: 50px;
+    height: 20px;
+    margin-left:-25px;
+    margin-top:-10px;    
+    background: #f88;        
+    border: 1px solid #a22;
+  }
+  </style>
+	<script>
+   function Rand(min, max) {
+      return Math.random() * (max - min) + min;
+   }
+
+	 var curposX = 150;
+	 var padposX = 150;
+	 var padposY = 280;	 
+   var steps = 10;
+   var ballposX = 150;
+   var ballposY = 150;
+   var ballSpeedX = Rand(-1, 1);
+   var ballSpeedY = 1;
+   var maxBallSpeed = 7;
+   var brickSpeedDown = 1;
+   var maxbrickSpeedDown = 10;
+   var GameOver = false;
+   var score = 0;
+   var life = 3;
+   var CanAddBrick = true;
+   function start() {
+	  curposX = 150;
+	  padposX = 150;
+	  padposY = 280;	 
+    ballposX = 150;
+    ballposY = 150;
+    ballSpeedX = Rand(-1, 1);
+    ballSpeedY = 1;
+    GameOver = false;
+    score = 0;
+    life = 3;
+    $('.menu').hide();
+    takt();
+   }
+   function takt() {
+      var nextstepX = Math.round((curposX - padposX) / steps);
+      padposX = padposX + nextstepX;
+      if (padposX <= 25) {padposX = 25;} 
+      if (padposX >= 275) {padposX = 275;}       
+      $('.pad').css({'left':padposX});
+      $('.pad').css({'top':padposY});
+
+      brickSpeedDown = brickSpeedDown + 0.001;
+      
+      var r = Rand(0, 100);
+
+      if ((r > 90) && (CanAddBrick)) {
+        var brickX = Math.round(Rand(0, 5)) * 50 + 25;
+        $('.gamepoly').append('<div class="brick" style="left:' + brickX +'px; top: 0;"></div>');
+      }
+      CanAddBrick = true;
+      $('.brick').each(function() {
+        CanAddBrick = false;
+        var BrickY = parseInt($(this).css('top'));
+        var BrickX = parseInt($(this).css('left'));
+        BrickY = Math.round(BrickY + brickSpeedDown);
+        $(this).css({'top': BrickY});
+        if (BrickY >= 300) {
+          $(this).remove();
+        }
+        if ((BrickY % 20) == 0) {
+          CanAddBrick = true;
+        }
+        
+      if ((ballposY >= BrickY - 10 - 5) && 
+          (ballposY <= BrickY + 10 + 5) &&
+          (ballposX >= BrickX - 25 - 5) && 
+          (ballposX <= BrickX + 25 + 5))  {
+      
+          ballSpeedY = -ballSpeedY;
+          ballSpeedX = -ballSpeedX;
+          $(this).remove();
+      }
+
+        
+      });
+
+
+      ballSpeedY = ballSpeedY + 0.1;
+      if (ballSpeedX > maxBallSpeed) {ballSpeedX = maxBallSpeed;};
+      if (ballSpeedX < -maxBallSpeed) {ballSpeedX = -maxBallSpeed;};      
+      if (ballSpeedY > maxBallSpeed) {ballSpeedY = maxBallSpeed;};
+      if (ballSpeedY < -maxBallSpeed) {ballSpeedY = -maxBallSpeed;};      
+      ballposX = ballposX + ballSpeedX;
+      ballposY = ballposY + ballSpeedY;
+      $('.ball').css({'left':ballposX});
+      $('.ball').css({'top':ballposY});
+
+      if ((ballposY >= padposY - 00 - 5) && 
+          (ballposY <= padposY + 20 + 5) &&
+          (ballposX >= padposX - 25 - 5) && 
+          (ballposX <= padposX + 25 + 5))  {
+      
+          ballSpeedY = -maxBallSpeed;
+
+          ballSpeedX = (ballSpeedX + nextstepX) / 2;
+      }
+
+      if  ((ballposX >= 295) || (ballposX <= 5)) {
+          ballSpeedX = -ballSpeedX;
+      }
+      
+          
+      
+      if (ballposY > 300) {
+        life --;
+        ballposX = 150;
+        ballposY = 150;
+        ballSpeedX = Rand(-1, 1);
+        ballSpeedY = 1;        
+      }
+      if (life == 0) {
+            GameOver = true;
+            $('.menu').show();
+        };
+      if (!GameOver) {
+        setTimeout('takt()', 40);
+        
+      }
+      
+   };
+
+	 function Init(){
+  	  var H = $(window).height()
+      $('.mousepoly').css({'height': H});
+      $('.mousepoly').mousemove(function( event ) {
+          var offsetX = parseInt($(this).css('marginLeft')); 
+          curposX = event.pageX - offsetX;
+          curposY = event.pageY;  
+      });
+      $('.mousepoly').bind('touchmove', function(jQueryEvent) {
+       jQueryEvent.preventDefault();
+       var event = window.event;
+          var offsetX = parseInt($(this).css('marginLeft')); 
+          curposX = event.touches[0].pageX - offsetX;
+          curposY = event.touches[0].pageY;
+      });
+   };
+	</script>
+	</head>
+	<body onload="Init()">
+   <div class="mousepoly" id="mousepoly">
+   <div class="gamepoly" id="gamepoly">
+   <div class="menu" id="menu">
+    <div class="button" onclick="start()">Start game</div>
+   </div>   
+   <div class="ball" id="ball"></div>
+   <div class="pad" id="pad"></div>
+   </div>
+   </div>
+	</body>
+</html>
